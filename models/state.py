@@ -1,26 +1,32 @@
 #!/usr/bin/python3
-"""This is the city class"""
-from models.base_model import BaseModel, Base
-from os import getenv
-from sqlalchemy import Column, Integer, String, ForeignKey
+""" State Module for HBNB project """
+import os
+from sqlalchemy import Column, String
 from sqlalchemy.orm import relationship
-from sqlalchemy.ext.declarative import declarative_base
+
+from models.base_model import BaseModel, Base
+from models.city import City
 
 
-class City(BaseModel, Base):
-    """This is the class for City
-    Attributes:
-        state_id: The state id
-        name: input name
-        places (sqlalchemy relationship): The user-Place relationship.
-    """
-
-    __tablename__ = "cities"
-
-    if getenv('HBNB_TYPE_STORAGE') == 'db':
-        state_id = Column(String(60), ForeignKey('states.id'), nullable=False)
-        name = Column(String(128), nullable=False)
-        places = relationship("Place", backref="cities", cascade="delete")
+class State(BaseModel, Base):
+    """ State class """
+    __tablename__ = 'states'
+    name = Column(
+        String(128), nullable=False
+    ) if os.getenv('HBNB_TYPE_STORAGE') == 'db' else ''
+    if os.getenv('HBNB_TYPE_STORAGE') == 'db':
+        cities = relationship(
+            'City',
+            cascade='all, delete, delete-orphan',
+            backref='state'
+        )
     else:
-        state_id = ''
-        name = ''
+        @property
+        def cities(self):
+            """Returns the cities in this State"""
+            from models import storage
+            cities_in_state = []
+            for value in storage.all(City).values():
+                if value.state_id == self.id:
+                    cities_in_state.append(value)
+            return cities_in_state

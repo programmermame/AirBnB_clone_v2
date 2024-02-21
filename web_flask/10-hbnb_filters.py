@@ -1,36 +1,39 @@
 #!/usr/bin/python3
-"""
-A script that starts a Flask web application:
-"""
+'''A simple Flask web application.
+'''
+from flask import Flask, render_template
 
-from flask import Flask
 from models import storage
-from flask import render_template
+from models.amenity import Amenity
+from models.state import State
+
 
 app = Flask(__name__)
+'''The Flask application instance.'''
+app.url_map.strict_slashes = False
 
 
-@app.route('/hbnb_filters', strict_slashes=False)
-def states_list_route():
-    """
-    List all cities a of states: display a HTML page: (inside the tag BODY)
-    Returns:
-        html: template that lists states, cities & amenity sort by name A->Z
-    """
-    data = {
-        "states": storage.all("State").values(),
-        "amenities": storage.all("Amenity").values()
+@app.route('/hbnb_filters')
+def hbnb_filters():
+    '''The hbnb_filters page.'''
+    all_states = list(storage.all(State).values())
+    amenities = list(storage.all(Amenity).values())
+    all_states.sort(key=lambda x: x.name)
+    amenities.sort(key=lambda x: x.name)
+    for state in all_states:
+        state.cities.sort(key=lambda x: x.name)
+    ctxt = {
+        'states': all_states,
+        'amenities': amenities
     }
-    return render_template("10-hbnb_filters.html", models=data)
+    return render_template('10-hbnb_filters.html', **ctxt)
 
 
 @app.teardown_appcontext
-def close_db(exception=None):
-    """
-    After each request remove the current SQLAlchemy Session:
-    """
+def flask_teardown(exc):
+    '''The Flask app/request context end event listener.'''
     storage.close()
 
 
-if __name__ == "__main__":
-    app.run(host="0.0.0.0", port=5000)
+if __name__ == '__main__':
+    app.run(host='0.0.0.0', port='5000')
