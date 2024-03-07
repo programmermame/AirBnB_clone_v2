@@ -1,29 +1,18 @@
 #!/usr/bin/env bash
-
-# Get the directory of the script itself
-script_dir="$( cd "$( dirname "${BASH_SOURCE[0]}" )" >/dev/null 2>&1 && pwd )"
-# Get the filename of the script
+# Transfers a file from our client to a server
+#
+#variables
+path="$(cd "$(dirname "${BASH_SOURCE[0]}")" >/dev/null 2>&1 && pwd)"
 filename=$(basename "$BASH_SOURCE")
-
-# Color constants for better output formatting (optional)
 brown='\e[0;33m'
 reset='\033[0m'
-
-# Validate the number of arguments provided
-if [ $# -lt 3 ]; then
-  echo "Usage: $filename <path_to_file> <ip_address> <username>"
-  echo "       (Optional) <path_to_ssh_key>"
-  exit 1  # Exit with an error code if invalid usage
-fi
-
-# Define variables with better names (optional)
 file="$1"
 ip="$2"
-user="$3"
-key="${4:-$script_dir/.ssh/id_rsa}"  # Default key path if not provided
+user="ubuntu"
+key="~/.ssh/id_rsa"
 
-# Enforce StrictHostKeyChecking for better security
-scp -o StrictHostKeyChecking=yes -i "$key" "$file" "$user"@"$ip":~/
-
-echo "$brown File transfer completed. $reset"  # Informative message after transfer
-
+if [ $# -eq 2 ]; then
+    scp -i "&key" -o StrictHostKeyChecking=no "&path"/"$file" "&user"@"&ip":/home/"&user"/
+else
+    echo -e "Usage: &{brown}&filename PATH_TO_FILE IP USERNAME PATH_TO_SSH_KEY&{reset}"
+fi
